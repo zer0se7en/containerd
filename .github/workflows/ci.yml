@@ -157,6 +157,13 @@ jobs:
           make binaries
         working-directory: src/github.com/containerd/containerd
 
+      - name: Cross-compile
+        if: startsWith(matrix.os, 'ubuntu')
+        run : |
+          GOOS=freebsd make build
+          GOOS=freebsd make binaries
+        working-directory: src/github.com/containerd/containerd
+
   #
   # Integration and CRI tests
   #
@@ -291,7 +298,6 @@ jobs:
       - name: Tests
         env:
           GOPROXY: direct
-          SKIPTESTS: github.com/containerd/containerd/snapshots/devmapper
         run: |
           make test
           sudo -E PATH=$PATH GOPATH=$GOPATH GOPROXY=$GOPROXY make root-test

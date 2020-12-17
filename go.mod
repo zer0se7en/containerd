@@ -11,7 +11,7 @@ require (
 	github.com/containerd/btrfs v0.0.0-20201111183144-404b9149801e
 	github.com/containerd/cgroups v0.0.0-20200824123100-0b889c03f102
 	github.com/containerd/console v1.0.1
-	github.com/containerd/continuity v0.0.0-20201204184040-1d9893e5674b
+	github.com/containerd/continuity v0.0.0-20201208142359-180525291bb7
 	github.com/containerd/fifo v0.0.0-20201026212402-0724c46b320c
 	github.com/containerd/go-cni v1.0.1
 	github.com/containerd/go-runc v0.0.0-20200220073739-7016d3ce2328
@@ -42,7 +42,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/opencontainers/runc v1.0.0-rc92
 	github.com/opencontainers/runtime-spec v1.0.3-0.20200728170252-4d89ac9fbff6
-	github.com/opencontainers/selinux v1.6.0
+	github.com/opencontainers/selinux v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/sirupsen/logrus v1.7.0
@@ -50,7 +50,6 @@ require (
 	github.com/syndtr/gocapability v0.0.0-20180916011248-d98352740cb2
 	github.com/tchap/go-patricia v2.2.6+incompatible
 	github.com/urfave/cli v1.22.2
-	github.com/willf/bitset v1.1.11 // indirect
 	go.etcd.io/bbolt v1.3.5
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
