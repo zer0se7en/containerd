@@ -242,6 +242,30 @@ func WithMounts(osi osinterface.OS, config *runtime.ContainerConfig, extra []*ru
 	}
 }
 
+const (
+	etcHosts       = "/etc/hosts"
+	etcHostname    = "/etc/hostname"
+	resolvConfPath = "/etc/resolv.conf"
+)
+
+// WithRelabeledContainerMounts relabels the default container mounts for files in /etc
+func WithRelabeledContainerMounts(mountLabel string) oci.SpecOpts {
+	return func(ctx context.Context, client oci.Client, _ *containers.Container, s *runtimespec.Spec) (err error) {
+		if mountLabel == "" {
+			return nil
+		}
+		for _, m := range s.Mounts {
+			switch m.Destination {
+			case etcHosts, etcHostname, resolvConfPath:
+				if err := label.Relabel(m.Source, mountLabel, false); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+}
+
 // Ensure mount point on which path is mounted, is shared.
 func ensureShared(path string, lookupMount func(string) (mount.Info, error)) error {
 	mountInfo, err := lookupMount(path)
@@ -329,7 +353,7 @@ func WithDevices(osi osinterface.OS, config *runtime.ContainerConfig) oci.SpecOp
 	}
 }
 
-// WithCapabilities sets the provided capabilties from the security context
+// WithCapabilities sets the provided capabilities from the security context
 func WithCapabilities(sc *runtime.LinuxContainerSecurityContext) oci.SpecOpts {
 	capabilities := sc.GetCapabilities()
 	if capabilities == nil {

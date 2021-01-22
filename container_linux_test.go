@@ -124,7 +124,7 @@ func TestRegressionIssue4769(t *testing.T) {
 	select {
 	case et := <-eventStream:
 		if et.Event == nil {
-			t.Fatal(errors.Errorf("unexpect empty event: %+v", et))
+			t.Fatal(errors.Errorf("unexpected empty event: %+v", et))
 		}
 
 		v, err := typeurl.UnmarshalAny(et.Event)
@@ -133,7 +133,7 @@ func TestRegressionIssue4769(t *testing.T) {
 		}
 
 		if e, ok := v.(*apievents.TaskExit); !ok {
-			t.Fatal(errors.Errorf("unexpect event type: %+v", v))
+			t.Fatal(errors.Errorf("unexpected event type: %+v", v))
 		} else if e.ExitStatus != 0 {
 			t.Fatal(errors.Errorf("expect zero exit status, but got %v", e.ExitStatus))
 		}
@@ -1178,6 +1178,10 @@ func TestContainerLoadUnexistingProcess(t *testing.T) {
 		t.Fatal("an error should have occurred when loading a process that does not exist")
 	}
 
+	if !errdefs.IsNotFound(err) {
+		t.Fatalf("an error of type NotFound should have been returned when loading a process that does not exist, got %#v instead ", err)
+	}
+
 	if err := task.Kill(ctx, syscall.SIGKILL); err != nil {
 		t.Error(err)
 	}
@@ -2043,6 +2047,10 @@ func TestShimOOMScore(t *testing.T) {
 	}
 
 	expectedScore := containerdScore + 1
+	if expectedScore > sys.OOMScoreAdjMax {
+		expectedScore = sys.OOMScoreAdjMax
+	}
+
 	// find the shim's pid
 	if cgroups.Mode() == cgroups.Unified {
 		processes, err := cg2.Procs(false)
