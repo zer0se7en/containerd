@@ -18,6 +18,7 @@ package config
 
 import (
 	"context"
+	"net/url"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -252,6 +253,10 @@ type PluginConfig struct {
 	// isolation, security and early detection of issues in the mount configuration when using
 	// ReadOnlyRootFilesystem since containers won't silently mount a temporary volume.
 	IgnoreImageDefinedVolumes bool `toml:"ignore_image_defined_volumes" json:"ignoreImageDefinedVolumes"`
+	// NetNSMountsUnderStateDir places all mounts for network namespaces under StateDir/netns instead
+	// of being placed under the hardcoded directory /var/run/netns. Changing this setting requires
+	// that all containers are deleted.
+	NetNSMountsUnderStateDir bool `toml:"netns_mounts_under_state_dir" json:"netnsMountsUnderStateDir"`
 }
 
 // X509KeyPairStreaming contains the x509 configuration for streaming
@@ -353,6 +358,14 @@ func ValidatePluginConfig(ctx context.Context, c *PluginConfig) error {
 		}
 		for endpoint, auth := range c.Registry.Auths {
 			auth := auth
+			u, err := url.Parse(endpoint)
+			if err != nil {
+				return errors.Wrapf(err, "failed to parse registry url %q from `registry.auths`", endpoint)
+			}
+			if u.Scheme != "" {
+				// Do not include the scheme in the new registry config.
+				endpoint = u.Host
+			}
 			config := c.Registry.Configs[endpoint]
 			config.Auth = &auth
 			c.Registry.Configs[endpoint] = config

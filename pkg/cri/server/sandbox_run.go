@@ -19,6 +19,7 @@ package server
 import (
 	"encoding/json"
 	"math"
+	"path/filepath"
 	goruntime "runtime"
 	"strings"
 
@@ -120,7 +121,11 @@ func (c *criService) RunPodSandbox(ctx context.Context, r *runtime.RunPodSandbox
 		// handle. NetNSPath in sandbox metadata and NetNS is non empty only for non host network
 		// namespaces. If the pod is in host network namespace then both are empty and should not
 		// be used.
-		sandbox.NetNS, err = netns.NewNetNS()
+		var netnsMountDir string = "/var/run/netns"
+		if c.config.NetNSMountsUnderStateDir {
+			netnsMountDir = filepath.Join(c.config.StateDir, "netns")
+		}
+		sandbox.NetNS, err = netns.NewNetNS(netnsMountDir)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create network namespace for sandbox %q", id)
 		}
@@ -331,7 +336,7 @@ func (c *criService) RunPodSandbox(ctx context.Context, r *runtime.RunPodSandbox
 	//
 	// TaskOOM from containerd may come before sandbox is added to store,
 	// but we don't care about sandbox TaskOOM right now, so it is fine.
-	c.eventMonitor.startExitMonitor(context.Background(), id, task.Pid(), exitCh)
+	c.eventMonitor.startSandboxExitMonitor(context.Background(), id, task.Pid(), exitCh)
 
 	return &runtime.RunPodSandboxResponse{PodSandboxId: id}, nil
 }
@@ -370,6 +375,7 @@ func (c *criService) setupPodNetwork(ctx context.Context, sandbox *sandboxstore.
 func cniNamespaceOpts(id string, config *runtime.PodSandboxConfig) ([]cni.NamespaceOpts, error) {
 	opts := []cni.NamespaceOpts{
 		cni.WithLabels(toCNILabels(id, config)),
+		cni.WithCapability(annotations.PodAnnotations, config.Annotations),
 	}
 
 	portMappings := toCNIPortMappings(config.GetPortMappings())

@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [1.15.6]
+        go-version: [1.15.8]
         os: [ubuntu-18.04, macos-10.15, windows-2019]
 
     steps:
@@ -36,7 +36,7 @@ jobs:
 
       - uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.29.0
+          version: v1.36.0
           working-directory: src/github.com/containerd/containerd
           args: --timeout=5m
 
@@ -71,9 +71,9 @@ jobs:
         working-directory: src/github.com/containerd/containerd
 
     steps:
-      - uses: actions/setup-go@v1
+      - uses: actions/setup-go@v2
         with:
-          go-version: '1.15.6'
+          go-version: '1.15.8'
 
       - uses: actions/checkout@v2
         with:
@@ -104,9 +104,9 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/setup-go@v1
+      - uses: actions/setup-go@v2
         with:
-          go-version: '1.15.6'
+          go-version: '1.15.8'
 
       - name: Set env
         shell: bash
@@ -137,9 +137,9 @@ jobs:
         os: [ubuntu-18.04, macos-10.15, windows-2019]
 
     steps:
-      - uses: actions/setup-go@v1
+      - uses: actions/setup-go@v2
         with:
-          go-version: '1.15.6'
+          go-version: '1.15.8'
 
       - name: Set env
         shell: bash
@@ -179,9 +179,9 @@ jobs:
         working-directory: src/github.com/containerd/containerd
 
     steps:
-      - uses: actions/setup-go@v1
+      - uses: actions/setup-go@v2
         with:
-          go-version: '1.15.6'
+          go-version: '1.15.8'
 
       - uses: actions/checkout@v2
         with:
@@ -232,7 +232,7 @@ jobs:
   integration-linux:
     name: Linux Integration
     runs-on: ubuntu-18.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     needs: [project, linters, protos, man]
 
     strategy:
@@ -247,9 +247,9 @@ jobs:
             runc: crun
 
     steps:
-      - uses: actions/setup-go@v1
+      - uses: actions/setup-go@v2
         with:
-          go-version: '1.15.6'
+          go-version: '1.15.8'
 
       - uses: actions/checkout@v2
         with:
@@ -339,7 +339,7 @@ jobs:
             [plugins.cri.containerd.default_runtime]
               runtime_type = "${TEST_RUNTIME}"
           EOF
-          ls /etc/cni/net.d
+          sudo ls /etc/cni/net.d
           sudo PATH=$PATH BDIR=$BDIR /usr/local/bin/containerd -a ${BDIR}/c.sock --config ${BDIR}/config.toml --root ${BDIR}/root --state ${BDIR}/state --log-level debug &> ${BDIR}/containerd-cri.log &
           sudo PATH=$PATH BDIR=$BDIR /usr/local/bin/ctr -a ${BDIR}/c.sock version
           sudo PATH=$PATH BDIR=$BDIR GOPATH=$GOPATH critest --runtime-endpoint=unix:///${BDIR}/c.sock --parallel=8
@@ -353,7 +353,7 @@ jobs:
     name: CGroupsV2 and SELinux Integration
     # nested virtualization is only available on macOS hosts
     runs-on: macos-10.15
-    timeout-minutes: 40
+    timeout-minutes: 45
     needs: [project, linters, protos, man]
     strategy:
       matrix:
@@ -363,7 +363,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - run: vagrant up
+      - name: "Cache ~/.vagrant.d/boxes"
+        uses: actions/cache@v2
+        with:
+          path: ~/.vagrant.d/boxes
+          key: vagrant-${{ hashFiles('Vagrantfile*') }}
+
+      - run: |
+          # Retry if it fails (download.fedoraproject.org returns 404 sometimes)
+          vagrant up || vagrant up
 
       - name: Integration
         env:

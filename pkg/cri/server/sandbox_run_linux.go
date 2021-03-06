@@ -151,6 +151,8 @@ func (c *criService) sandboxContainerSpec(id string, config *runtime.PodSandboxC
 	specOpts = append(specOpts,
 		customopts.WithAnnotation(annotations.ContainerType, annotations.ContainerTypeSandbox),
 		customopts.WithAnnotation(annotations.SandboxID, id),
+		customopts.WithAnnotation(annotations.SandboxNamespace, config.GetMetadata().GetNamespace()),
+		customopts.WithAnnotation(annotations.SandboxName, config.GetMetadata().GetName()),
 		customopts.WithAnnotation(annotations.SandboxLogDir, config.GetLogDirectory()),
 	)
 
@@ -168,7 +170,7 @@ func (c *criService) sandboxContainerSpecOpts(config *runtime.PodSandboxConfig, 
 	ssp := securityContext.GetSeccomp()
 	if ssp == nil {
 		ssp, err = generateSeccompSecurityProfile(
-			securityContext.GetSeccompProfilePath(), // nolint:staticcheck deprecated but we don't want to remove yet
+			securityContext.GetSeccompProfilePath(), //nolint:staticcheck // Deprecated but we don't want to remove yet
 			c.config.UnsetSeccompProfile)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to generate seccomp spec opts")
